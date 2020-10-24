@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<script type = "text/javascript" src="jquery-1.11.3.js"></script>
+	<script type = "text/javascript" src="jquery.cookie.js"></script>
+	<script>
+		$(function(){
+			//1、通过ajax加载数据
+			$.ajax({
+				url: "data.json",
+				// dataType: "json",  默认会自动检测返回的数据
+				success: function(arr){
+					//通过循环创建节点添加到页面上
+					for(var i = 0; i < arr.length; i++){
+						$(`<li class = 'goods_item'>
+							<div class = 'goods_pic'>
+								<img src="${arr[i].img}" alt="">
+							</div>
+							<div class = 'goods_title'>
+								<p>【京东超市】奥利奥软点小草莓</p>
+							</div>
+							<div class = 'sc'>
+								<div id = "${arr[i].id}" class = 'sc_btn'>加入购物车</div>
+							</div>
+						</li>`).appendTo($(".goods_box ul"));
+					}
+
+				},
+				error: function(msg){
+					alert(msg);
+				}
+			})
+
+			
+			//通过事件委托，给后添加的按钮，绑定点击事件
+			/*
+				单个商品都使用对象来存储
+				多个商品，使用数组存储
+				【注】最外层是数组，里面每一个元素是对象。
+				cookie只能存储字符串，将数组转成对应的json格式字符串，存储在cookie中。
+				键:goods  值：json格式字符串
+				*/
+			$(".goods_box").on("click", ".sc_btn", function(){
+				//当前点击按钮所在商品的id
+				var id = this.id;
+				//加入购物车 cookie实现
+				//1、判断是否是第一次添加
+				
+				var first = $.cookie("goods") == null ? true : false;
+				if(first){
+					$.cookie("goods", `[{"id":${id},"num":1}]`, {
+						expires: 7
+					})
+				}else{
+					var cookieStr = $.cookie("goods");
+					var cookieArr = JSON.parse(cookieStr);
+					var same = false; //假设没有相同的商品
+					for(var i = 0; i < cookieArr.length; i++){
+						if(id == cookieArr[i].id){
+							//数量+1
+							cookieArr[i].num++;
+							same = true;
+							break;
+						}
+					}
+
+					//如果没有相同的
+					if(!same){
+						var obj = {id: id, num: 1};
+						cookieArr.push(obj);
+					}
+
+					//存储到cookie中
+					$.cookie("goods", JSON.stringify(cookieArr), {
+						expires: 7
+					});
+				}
+				alert($.cookie("goods"));
+			})
+
+		})
+	</script>
+	<style>
+		
+		*{
+			margin: 0;
+			padding: 0;
+		}
+		body{
+			overflow: hidden;
+		}
+		li{
+			list-style-type: none;
+		}
+		.goods_box ul:after{
+			content: "",
+			display:block;
+			clear: both;
+		}
+		.goods_box ul{
+			width: 1100px;
+			margin:0 auto;
+		}
+		.goods_item{
+			padding: 10px 6px;
+			border-right: 1px solid #b6b6b6;
+			float: left;
+			position: relative;
+			margin-bottom: 20px;
+		}
+		.goods_pic{
+			padding: 2px 15px;
+			margin: 0 auto;
+			width: 160px;
+			height: 160px;
+			-webkit-transition:all 0.5s ease-in-out;
+			-moz-transition:all 1s ease-in-out;
+		}
+		.goods_pic:hover{
+			transform:rotate(180deg);
+			box-shadow: 2px 2px 5px #b6b6b6;
+		}
+		.goods_title{
+			font-size: 12px;
+		    text-align: left;
+		    color: #999;
+		    padding: 13px 0 7px;
+		    display: block;
+		    max-width: 100%;
+		    _width: 100%;
+		    white-space: nowrap;
+		    text-overflow: ellipsis;
+		    overflow: hidden;
+		}
+		.sc{
+			padding: 10px 5px;
+		}
+		.sc_btn{
+			width: 100px;
+			margin: 0 auto;
+			text-align: center;
+			padding: 5px 10px;
+			border-radius: 2px;
+			box-shadow: 0 0 2px #f10;
+			height: 20px;
+			background: #fc1934;
+			color: #fff;
+			font-weight: bold;
+			font-size: 18px;
+			cursor:pointer;
+
+		}
+		.sc_right{
+			position: absolute;
+			width: 270px;
+			border-left: 2px solid #b6b6b6;
+			right: -270px;
+			top: 0;
+			height: 100%;
+
+		}
+		.sc_pic{
+			width: 40px;
+			height: 40px;
+			padding: 4px 6px;
+			background: url(toolbars.png) #999 15px 15px no-repeat;
+			position: relative;
+			left: -52px;
+			top: 50%;
+			margin-top: -24px;
+
+		}
+		.sc_num{
+			position: absolute;
+			padding: 2px 8px;
+			border-radius: 50%;
+			background: red;
+			color: #fff;
+			top: -8px;
+			left: 20px;
+			z-index: 1;
+		}
+		.sc_goodsPic{
+			
+			width: 80px;
+			height: 80px;
+			border: 1px solid #b6b6b6;
+			float: left;
+
+		}
+		.sc_goodsPic img{
+			width: 100%;
+			height: 100%;
+		}
+		.sc_goodsTitle{
+			line-height: 40px;
+			color: #999;
+			margin-left: 20px;
+			float: left;
+		}
+		.sc_goodsBtn{
+			
+			background: #fc1934;
+			color: #fff;
+			text-align: center;
+			float: left;
+			line-height: 30px;
+			width: 60px;
+			height: 30px;
+			margin-left: 20px;
+			cursor: pointer;
+
+		}
+		.sc_goodsNum{
+			float: left;
+			line-height: 30px;
+			font-size: 10px;
+			margin-left: 5px;
+
+		}
+		.sc_right li{
+			height: 100px;
+		}
+
+
+	</style>
+
+	<script>
+		
+
+	</script>
+</head>
+<body>
+<!-- 商品列表 -->
+	<div class="goods_box">
+		
+		<ul>
+			
+
+		</ul>
+
+	</div>
+
+<!-- 右边购物车 -->
+	<div class="sc_right">
+		<div class="sc_pic">
+			<!-- 购物车内商品的数量 -->
+			<div class="sc_num">
+				0
+			</div>
+		</div>
+
+		<ul>
+			
+		</ul>
+	</div>
+	
+</body>
+</html
+
+
+
+
+
+
+
